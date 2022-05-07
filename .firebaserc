@@ -1,0 +1,14 @@
+{
+  "targets": {
+    "dijkstra-train-station": {
+      "hosting": {
+        "dijkstra-train-station": [
+          "dijkstra-train-station"
+        ]
+      }
+    }
+  },
+  "projects": {
+    "default": "dijkstra-train-station"
+  }
+}

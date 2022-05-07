@@ -150,17 +150,9 @@
 <div class="content" role="main">
 
   <div style="width: 100%;">
-    <mat-card class="station-card">
-      <mat-card-title>Shoranur Junction</mat-card-title>
-      <mat-card-subtitle>Distance: 0.0 km</mat-card-subtitle>
-    </mat-card>
-    <mat-card class="station-card">
-      <mat-card-title>Tirur Railway Station</mat-card-title>
-      <mat-card-subtitle>Distance: 80.0 km</mat-card-subtitle>
-    </mat-card>
-    <mat-card class="station-card">
-      <mat-card-title>Kasargod Junction</mat-card-title>
-      <mat-card-subtitle>Distance: 300.0 km</mat-card-subtitle>
+    <mat-card class="station-card" *ngFor="let station of stations">
+      <mat-card-title>{{ station.name }}</mat-card-title>
+      <mat-card-subtitle>Distance: {{ station.distance }} km</mat-card-subtitle>
     </mat-card>
   </div>
 

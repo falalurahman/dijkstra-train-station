@@ -29,7 +29,13 @@ const setStartStation = function(
   db.collection("startStation").doc("startStation")
       .set({value: newStartStation})
       .then(() => {
-        response.send("Starting Station: " + newStartStation);
+        return computeShortestDistanceFromSource(newStartStation);
+      }).then((distanceMap: Map<string, number>) => {
+        const distanceMapSorted = new Map([...distanceMap.entries()]
+            .sort((a, b) => a[1] - b[1]));
+        return Array.from(distanceMapSorted.keys());
+      }).then((shortestDistanceAirportsList: string[]) => {
+        response.json(shortestDistanceAirportsList.slice(1, 6));
       });
 };
 
@@ -38,10 +44,10 @@ export const updateDistancesFromStartStation = functions.firestore
     .onWrite(
         (change: functions.Change<functions.firestore.DocumentSnapshot>) => {
           const updatedValue = change.after.data()?.["value"];
-          return computeShortestDistanceFromSource(updatedValue);
+          return updateShortestDistanceFromSourceInFirebase(updatedValue);
         });
 
-const computeShortestDistanceFromSource = function(
+const updateShortestDistanceFromSourceInFirebase = function(
     sourceAirport: string
 ): Promise<WriteResult[]> {
   return db.collection("edges").get().then(
@@ -68,6 +74,35 @@ const computeShortestDistanceFromSource = function(
         const distanceMap = runDijkstraAlgorithm(
             airportList, graph, sourceAirport);
         return updateDistanceInFirebase(distanceMap);
+      });
+};
+
+
+const computeShortestDistanceFromSource = function(
+    sourceAirport: string
+): Promise<Map<string, number>> {
+  return db.collection("edges").get().then(
+      (edgesData: QuerySnapshot<DocumentData>) => {
+        const graph = new Map<string, Map<string, number>>();
+        const airportSet = new Set<string>();
+        edgesData.forEach(
+            (edgeDocument: QueryDocumentSnapshot<DocumentData>) => {
+              const edge: DocumentData = edgeDocument.data();
+              const fromAirport: string = edge["from"];
+              const toAirport: string = edge["to"];
+              const distanceBetweenAirport: number = edge["time"];
+
+              if (!graph.has(fromAirport)) {
+                graph.set(fromAirport, new Map<string, number>());
+              }
+              graph.get(fromAirport)?.set(toAirport, distanceBetweenAirport);
+              airportSet.add(fromAirport);
+              airportSet.add(toAirport);
+            });
+        const airportList = Array.from(airportSet.values());
+        const distanceMap = runDijkstraAlgorithm(
+            airportList, graph, sourceAirport, 6);
+        return distanceMap;
       });
 };
 
@@ -105,7 +140,8 @@ const minDistance = function(
 const runDijkstraAlgorithm = function(
     airportList: string[],
     graph: Map<string, Map<string, number>>,
-    sourceAirport: string
+    sourceAirport: string,
+    n: number | undefined = undefined
 ): Map<string, number> {
   const dist = new Map<string, number>();
   const sptSet = new Set<string>();
@@ -117,7 +153,7 @@ const runDijkstraAlgorithm = function(
 
   dist.set(sourceAirport, 0);
 
-  for (let count = 0; count < airportList.length - 1; count++) {
+  for (let count = 0; count < (n ?? (airportList.length - 1)); count++) {
     const minDistanceAirport = minDistance(dist, sptSet, airportList);
     sptSet.add(minDistanceAirport);
 

@@ -15,7 +15,7 @@ import {
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit {
-  title = 'Dijkstra Railway Stations';
+  title = 'Dijkstra Aiports';
 
   stations: StationDetails[] = []
 

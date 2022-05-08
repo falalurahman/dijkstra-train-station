@@ -1,32 +1,29 @@
-// The Cloud Functions for Firebase SDK to create Cloud Functions and set up triggers.
-const functions = require('firebase-functions');
-import { Request, Response } from "express";
-const admin = require('firebase-admin');
+import * as functions from "firebase-functions";
+import {Request, Response} from "express";
+import * as admin from "firebase-admin";
 
 admin.initializeApp();
 const db = admin.firestore();
 
-// // Start writing Firebase Functions
-// // https://firebase.google.com/docs/functions/typescript
-//
-export const updateStartStation = functions.https.onRequest((request: Request, response: Response) => {
-    const queryText = request.query.startStation;
-    let startStation: string | undefined = queryText?.toString()
-    if (startStation != undefined) {
-        db.collection('stations').get().then(
+export const updateStartStation = functions.https.onRequest(
+    (request: Request, response: Response) => {
+      const queryText = request.query.startStation;
+      const startStation: string | undefined = queryText?.toString();
+      if (startStation != undefined) {
+        db.collection("stations").get().then(
             (docSnap: any) => {
-                docSnap.forEach((doc: any) => {
-                    let name: string = doc.data()['name'];
-                    //const distance = doc.data()['distance'];
-                    if (startStation != undefined) {
-                        if (name.includes(startStation)) {
-                            response.send("Starting Station: " + name);
-                        }
-                    }
-                });
+              docSnap.forEach((doc: any) => {
+                const name: string = doc.data()["name"];
+                // const distance = doc.data()['distance'];
+                if (startStation != undefined) {
+                  if (name.includes(startStation)) {
+                    response.send("Starting Station: " + name);
+                  }
+                }
+              });
             }
-        )
-    } else {
+        );
+      } else {
         response.send("Undefined Station");
-    }
-});
+      }
+    });
